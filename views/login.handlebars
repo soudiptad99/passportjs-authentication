@@ -1,11 +1,11 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-4 col-sm-offset-4">
-            {{#if failMessage}}
-                <div class="alert alert-danger">{{failMessage}}</div>
-            {{/if}}
             {{#if successMessage}}
                 <div class="alert alert-success">{{successMessage}}</div>
+            {{/if}}
+            {{#if failMessage}}
+                <div class="alert alert-danger">{{failMessage}}</div>
             {{/if}}
             <form method="POST" actions="/login">
                 <div class="form-group">

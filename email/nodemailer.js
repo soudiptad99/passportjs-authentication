@@ -1,11 +1,11 @@
 var nodemailer = require('nodemailer');
 
 var transporter = nodemailer.createTransport('SMTP', {
-    service: 'Gmail',
+    service: 'SendGrid',
     secure: true,	// use SSL
     auth: {
-        user: '',
-        pass: ''
+        user: 'henryzhao',
+        pass: 'henry5201314'
     }
 });
 // var mailOptions = {

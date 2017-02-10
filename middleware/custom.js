@@ -1,5 +1,6 @@
 function isLoggedIn(req, res, next) {
 	res.locals.loggedIn = req.isAuthenticated();
+	res.locals.user = req.user;
 	next();
 };
 

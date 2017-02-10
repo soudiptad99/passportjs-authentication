@@ -5,6 +5,7 @@
 - body-parser
 - connect-flash
 - connect-mongo
+- crypto
 - cookie-parser
 - express
 - express-handlebars

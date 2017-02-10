@@ -1,7 +1,6 @@
 // https://scotch.io/tutorials/easy-node-authentication-setup-and-local
 // http://sahatyalkabov.com/how-to-implement-password-reset-in-nodejs/
 
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
@@ -26,9 +25,9 @@ mongoose.connect('mongodb://127.0.0.1:27017/passport', function(err) {
 	}
 });
 
-app.engine('handlebars', handlebars({defaultLayout: 'main'}));
 app.set('port', process.env.PORT || 3000);
 app.set('view engine', 'handlebars');
+app.engine('handlebars', handlebars({defaultLayout: 'main'}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, '/bower_components')));
@@ -55,8 +54,8 @@ app.use(flash());
 // Determine if the user is logged in or not
 app.use(middleware.isLoggedIn);
 
-// passport-local configuration
-require('./passport/local')(passport);
+// passport strategies
+require('./passport/strategies')(passport);
 
 // main routes
 app.use('/', routes);
