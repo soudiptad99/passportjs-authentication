@@ -1,6 +1,5 @@
 // https://scotch.io/tutorials/easy-node-authentication-setup-and-local
 // http://sahatyalkabov.com/how-to-implement-password-reset-in-nodejs/
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');

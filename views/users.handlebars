@@ -2,20 +2,36 @@
 	<div class="col-sm-12">
 		<h3 class="mb32">List of users</h3>
 		<table class="table table-striped table-bordered">
-			<thead>
-				<tr>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Email</th>
-				</tr>	
-			</thead>
 			<tbody>
 				{{#each users}}
-				<tr>
-					<td>{{local.firstName}}</td>
-					<td>{{local.lastName}}</td>
-					<td>{{local.email}}</td>
-				</tr>
+					{{#if this.local}}
+						<tr>
+							<td>{{this.local.firstName}}</td>
+							<td>{{this.local.lastName}}</td>
+							<td>{{this.local.email}}</td>
+						</tr>
+					{{/if}}
+					{{#if this.facebook}}
+						<tr>
+							<td>{{this.facebook.id}}</td>
+							<td>{{this.facebook.name}}</td>
+							<td>{{this.facebook.email}}</td>
+						</tr>
+					{{/if}}
+					{{#if this.twitter}}
+						<tr>
+							<td>{{this.twitter.id}}</td>
+							<td>{{this.twitter.displayName}}</td>
+							<td>{{this.twitter.email}}</td>
+						</tr>
+					{{/if}}
+					{{#if this.google}}
+						<tr>
+							<td>{{this.google.id}}</td>
+							<td>{{this.google.name}}</td>
+							<td>{{this.google.email}}</td>
+						</tr>
+					{{/if}}
 				{{/each}}	
 			</tbody>
 		</table>

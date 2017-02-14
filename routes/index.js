@@ -148,5 +148,31 @@ router.post('/reset/:token', function(req, res) {
     });
 });
 
+// GET /auth/facebook
+router.get('/auth/facebook', passport.authenticate('facebook', { scope: 'email' }));
+
+// POST /auth/facebook/callback
+router.get('/auth/facebook/callback', passport.authenticate('facebook', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
+
+// GET /auth/twitter
+router.get('/auth/twitter', passport.authenticate('twitter'));
+
+// POST /auth/twitter/callback
+router.get('/auth/twitter/callback', passport.authenticate('twitter', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
+
+// GET /auth/google
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// POST /auth/google/callback
+router.get('/auth/google/callback', passport.authenticate('google', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
 
 module.exports = router;

@@ -1,9 +1,9 @@
 <div class="row">
 	<div class="col-sm-8">
+		<h2>ID: {{user._id}}</h2>
 		<table class="table table-bordered">
 			<tr>
-				<th>ID</th>
-				<td>{{user._id}}</td>
+				<th colspan="2">Local Strategy</th>
 			</tr>
 			<tr>
 				<th>First Name</th>
@@ -20,6 +20,57 @@
 			<tr>
 				<th>Password</th>
 				<td>{{user.local.password}}</td>
+			</tr>
+		</table>
+		<table class="table table-bordered">
+			<tr>
+				<th colspan="2">Facebook Strategy</th>
+			</tr>
+			<tr>
+				<th>Facebook ID</th>
+				<td>{{user.facebook.id}}</td>
+			</tr>
+			<tr>
+				<th>Email</th>
+				<td>{{user.facebook.email}}</td>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<td>{{user.facebook.name}}</td>
+			</tr>
+		</table>
+		<table class="table table-bordered">
+			<tr>
+				<th colspan="2">Twitter Strategy</th>
+			</tr>
+			<tr>
+				<th>Facebook ID</th>
+				<td>{{user.twitter.id}}</td>
+			</tr>
+			<tr>
+				<th>Username</th>
+				<td>{{user.twitter.username}}</td>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<td>{{user.twitter.displayName}}</td>
+			</tr>
+		</table>
+		<table class="table table-bordered">
+			<tr>
+				<th colspan="2">Google+ Strategy</th>
+			</tr>
+			<tr>
+				<th>Facebook ID</th>
+				<td>{{user.google.id}}</td>
+			</tr>
+			<tr>
+				<th>Username</th>
+				<td>{{user.google.email}}</td>
+			</tr>
+			<tr>
+				<th>Name</th>
+				<td>{{user.google.name}}</td>
 			</tr>
 		</table>	
 	</div>

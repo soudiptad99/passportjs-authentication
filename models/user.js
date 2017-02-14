@@ -34,8 +34,49 @@ var userSchema = new mongoose.Schema({
 		},
 		resetPasswordToken: String,
   		resetPasswordExpires: Date
+	},
+	facebook: {
+		id: {
+			type: String
+		},
+		token: {
+			type: String
+		},
+        email: {
+        	type: String
+       	},
+        name: {
+        	type: String
+		}
+	},
+	twitter: {
+		id: {
+			type: String
+		},
+		token: {
+			type: String
+		},
+        username: {
+        	type: String
+       	},
+        displayName: {
+        	type: String
+		}
+	},
+	google: {
+		id: {
+			type: String
+		},
+		token: {
+			type: String
+		},
+        email: {
+        	type: String
+       	},
+        name: {
+        	type: String
+		}
 	}
-
 });
 
 userSchema.methods.generateHash = function(password) {

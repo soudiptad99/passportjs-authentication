@@ -1,5 +1,9 @@
 var LocalStrategy = require('passport-local').Strategy;
+var FacebookStrategy  = require('passport-facebook').Strategy;
+var TwitterStrategy  = require('passport-twitter').Strategy;
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var User = require('../models/user');
+var auth = require('./auth');
 
 module.exports = function(passport) {
 
@@ -75,40 +79,6 @@ module.exports = function(passport) {
                     }
                 });
 
-                // find a user whose username is the same as the forms username
-                // we are checking to see if the user trying to login already exists
-                // User.findOne({'local.username': username}, function(err, user) {
-                //     // if there are any errors, return the error
-                //     if (err) {
-                //         return done(err);
-                //     }
-
-                //     // check to see if theres already a user with that username
-                //     if (user) {
-                //         return done(null, false, req.flash('registerMessage', 'That username is already taken.'));
-                //     } else {
-
-                //         // if there is no user with that username, create the user
-                //         var newUser = new User();
-
-                //         // set the user's local credentials
-                //         newUser.local.firstName = req.body.fname;
-                //         newUser.local.lastName = req.body.lname;
-                //         newUser.local.email = req.body.email;
-                //         newUser.local.username = username;
-                //         newUser.local.password = newUser.generateHash(password);
-
-                //         // save the user
-                //         newUser.save(function(err) {
-                //             if (err) {
-                //                 throw err;
-                //             }
-                //             return done(null, newUser);
-                //         });
-                //     }
-
-                // });
-
             });
 
         }
@@ -149,6 +119,135 @@ module.exports = function(passport) {
         }
     ));
 
+
+    passport.use(new FacebookStrategy({
+
+            // import crednetials from auth.js
+            clientID: auth.facebook.clientID,
+            clientSecret: auth.facebook.clientSecret,
+            callbackURL: auth.facebook.callbackURL
+
+        }, function(token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
+
+            // process.nextTick() for asynchronous
+            process.nextTick(function() {
+                User.findOne({'facebook.id': profile.id}, function(err, user) {
+                    if (err) {
+                        return done(err);
+                    } 
+                        console.log(profile)
+                    // if the user is found, then log them in
+                    if (user) {
+                        return done(null, user);    // user found, return that user
+                    } else {
+
+                        var newUser = User();
+                        newUser.facebook.id = profile.id;
+                        newUser.facebook.token = token;     // the token that facebook provides to the user
+                        newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName; // http://passportjs.org/docs/profile
+                        // newUser.facebook.email = profile.emails.value ? profile.emails.value : 'undefined'; // facebook can return multiple emails so we'll take the first
+                    }
+
+                    // save user to the database
+                    newUser.save(function(err) {
+                        if (err) {
+                            throw err;
+                        }
+                        // if successful, return the new user
+                        return done(null, newUser);                      
+                    });
+                });
+            });
+
+        }
+    ));
+
+
+    passport.use(new TwitterStrategy({
+
+            // import crednetials from auth.js
+            consumerKey: auth.twitter.consumerKey,
+            consumerSecret: auth.twitter.consumerSecret,
+            callbackURL: auth.twitter.callbackURL
+
+        }, function(token, tokenSecret, profile, done) {   // fb will send back the 'token' and 'profile'
+
+            // process.nextTick() for asynchronous
+            process.nextTick(function() {
+                User.findOne({'twitter.id': profile.id}, function(err, user) {
+                    if (err) {
+                        return done(err);
+                    } 
+                        console.log(profile)
+                    // if the user is found, then log them in
+                    if (user) {
+                        return done(null, user);    // user found, return that user
+                    } else {
+
+                        var newUser = User();
+                        newUser.twitter.id = profile.id;
+                        newUser.twitter.token = token;
+                        newUser.twitter.username = profile.username;
+                        newUser.twitter.displayName = profile.displayName;
+                    }
+
+                    // save user to the database
+                    newUser.save(function(err) {
+                        if (err) {
+                            throw err;
+                        }
+                        // if successful, return the new user
+                        return done(null, newUser);                      
+                    });
+                });
+            });
+
+        }
+    ));
+
+
+
+    passport.use(new GoogleStrategy({
+
+            // import crednetials from auth.js
+            clientID: auth.google.clientID,
+            clientSecret: auth.google.clientSecret,
+            callbackURL: auth.google.callbackURL
+
+        }, function(token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
+
+            // process.nextTick() for asynchronous
+            process.nextTick(function() {
+                User.findOne({'google.id': profile.id}, function(err, user) {
+                    if (err) {
+                        return done(err);
+                    } 
+                        console.log(profile)
+                    // if the user is found, then log them in
+                    if (user) {
+                        return done(null, user);    // user found, return that user
+                    } else {
+
+                        var newUser = User();
+                        newUser.google.id = profile.id;
+                        newUser.google.token = token;
+                        newUser.google.email = profile.emails[0].value;
+                        newUser.google.name = profile.displayName;
+                    }
+
+                    // save user to the database
+                    newUser.save(function(err) {
+                        if (err) {
+                            throw err;
+                        }
+                        // if successful, return the new user
+                        return done(null, newUser);                      
+                    });
+                });
+            });
+
+        }
+    ));
 
 
 };
