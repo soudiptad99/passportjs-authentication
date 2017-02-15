@@ -91,8 +91,8 @@ router.post('/forgot', function(req, res) {
 			return res.redirect('/forgot');
 		} else {
 			var token = crypto.createHash('md5').digest('hex');	// generate a md5 hash that is 128 bits long
-			user.local.resetPasswordToken = token;
-			user.local.resetPasswordExpires = Date.now() + 3600000; 	// expires in 1 hour
+			user.resetPasswordToken = token;
+			user.resetPasswordExpires = Date.now() + 3600000; 	// expires in 1 hour
 			user.save(function(err) {
 				if (err) {
 					req.flash('failMessage', err.message);
@@ -109,7 +109,7 @@ router.post('/forgot', function(req, res) {
 
 // GET /reset/:token
 router.get('/reset/:token', function(req, res) {
-    User.findOne({ 'local.resetPasswordToken': req.params.token, 'local.resetPasswordExpires': { $gt: Date.now() } }, function(err, user) {
+    User.findOne({ 'resetPasswordToken': req.params.token, 'resetPasswordExpires': { $gt: Date.now() } }, function(err, user) {
         if (!user) {
             req.flash('failMessage', 'Password reset token is invalid or has expired.');
             return res.redirect('/forgot');
@@ -126,14 +126,14 @@ router.post('/reset/:token', function(req, res) {
 		req.flash('failMessage', 'Your password does not match.');
 		return res.redirect('/reset/' + req.params.token);
 	}
-    User.findOne({ 'local.resetPasswordToken': req.params.token, 'local.resetPasswordExpires': { $gt: Date.now() } }, function(err, user) {
+    User.findOne({ 'resetPasswordToken': req.params.token, 'resetPasswordExpires': { $gt: Date.now() } }, function(err, user) {
         if (!user) {
             req.flash('failMessage', 'Password reset token is invalid or has expired.');
             return res.redirect('back');
         } else {
             user.local.password = user.generateHash(req.body.password);
-            user.local.resetPasswordToken = undefined;
-            user.local.resetPasswordExpires = undefined;
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
             user.save(function(err) {
                 if (err) {
                     req.flash('failMessage', err.message);
@@ -148,8 +148,12 @@ router.post('/reset/:token', function(req, res) {
     });
 });
 
+
+
+/////////// Social media account authentications
+
 // GET /auth/facebook
-router.get('/auth/facebook', passport.authenticate('facebook', { scope: 'email' }));
+router.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
 // POST /auth/facebook/callback
 router.get('/auth/facebook/callback', passport.authenticate('facebook', {
@@ -162,8 +166,8 @@ router.get('/auth/twitter', passport.authenticate('twitter'));
 
 // POST /auth/twitter/callback
 router.get('/auth/twitter/callback', passport.authenticate('twitter', {
-    successRedirect : '/dashboard',
-    failureRedirect : '/login'
+    successRedirect : '/dashboard', 
+    failureRedirect : '/login', 
 }));
 
 // GET /auth/google
@@ -174,5 +178,108 @@ router.get('/auth/google/callback', passport.authenticate('google', {
     successRedirect : '/dashboard',
     failureRedirect : '/login'
 }));
+
+
+/////////// Linking accounts
+
+// GET /connect/local
+router.get('/connect/local', function(req, res) {
+    res.render('connect-local', { 
+    	successMessage: req.flash('successMessage'),
+    	failMessage: req.flash('failMessage')
+    });
+});
+
+// POST /connect/local
+router.post('/connect/local', passport.authenticate('local-registration', {
+    successRedirect : '/dashboard', 	// redirect to the secure profile section
+    failureRedirect : '/connect/local', // redirect back to the /connect/local page if there is an error
+    failureFlash : true 				// allow flash messages
+}));
+
+// GET /connect/facebook
+router.get('/connect/facebook', passport.authorize('facebook', { scope : ['email'] }));
+
+// POST /connect/facebook - handle the callback after facebook has authorized the user
+router.get('/connect/facebook/callback', passport.authorize('facebook', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
+
+// GET /connect/twitter
+router.get('/connect/twitter', passport.authorize('twitter', { scope : 'email' }));
+
+// POST /connect/twitter - handle the callback after twitter has authorized the user
+router.get('/connect/twitter/callback', passport.authorize('twitter', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
+
+// GET /connect/google
+router.get('/connect/google', passport.authorize('google', { scope : ['profile', 'email'] }));
+
+// POST /connect/google - the callback after google has authorized the user
+router.get('/connect/google/callback', passport.authorize('google', {
+    successRedirect : '/dashboard',
+    failureRedirect : '/login'
+}));
+
+
+/////////// Unlinking accounts
+// user account will stay active in case they want to reconnect in the future
+
+// GET /unlink/local
+router.get('/unlink/local', function(req, res, next) {
+	if (!req.user) {
+		return next();
+	}
+    var user = req.user;
+    user.local.username = undefined;
+    user.local.password = undefined;
+    user.save(function(err) {
+    	if (err) return next(err);
+        res.redirect('/dashboard');
+    });
+});
+
+// GET /unlink/facebook
+router.get('/unlink/facebook', function(req, res, next) {
+	if (!req.user) {
+		return next();
+	}
+    var user = req.user;
+    user.facebook.token = undefined;
+    user.save(function(err) {
+    	if (err) return next(err);
+        res.redirect('/dashboard');
+    });
+});
+
+// GET /unlink/twitter
+router.get('/unlink/twitter', function(req, res, next) {
+	if (!req.user) {
+		return next();
+	}
+    var user = req.user;
+    user.twitter.token = undefined;
+    user.save(function(err) {
+    	if (err) return next(err);
+        res.redirect('/dashboard');
+    });
+});
+
+// GET /unlink/google
+router.get('/unlink/google', function(req, res, next) {
+	if (!req.user) {
+		return next();
+	}
+    var user = req.user;
+    user.google.token = undefined;
+    user.save(function(err) {
+    	if (err) return next(err);
+        res.redirect('/dashboard');
+    });
+});
+
 
 module.exports = router;

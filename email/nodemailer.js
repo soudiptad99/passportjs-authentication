@@ -4,8 +4,8 @@ var transporter = nodemailer.createTransport('SMTP', {
     service: 'SendGrid',
     secure: true,	// use SSL
     auth: {
-        user: 'YOUR ACCOUNT HERE',
-        pass: 'YOUR PASSWORD HERE'
+        user: 'henryzhao',
+        pass: 'henry5201314'
     }
 });
 // var mailOptions = {

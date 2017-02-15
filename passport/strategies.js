@@ -37,9 +37,9 @@ module.exports = function(passport) {
         },
         function(req, username, password, done) {
 
-            if (req.body.password !== req.body.confirmPassword) {
-                return done(null, false, req.flash('failMessage', 'Your passwords does not match.'));
-            }
+            // if (req.body.password !== req.body.confirmPassword) {
+            //     return done(null, false, req.flash('failMessage', 'Your passwords does not match.'));
+            // }
 
             // asynchronous
             // User.findOne wont fire unless data is sent back
@@ -51,32 +51,45 @@ module.exports = function(passport) {
                         return done(err);
                     }
 
-                    // check to see if theres already a user with that username
-                    if (users.length > 0) {
-                        if (users[0].local.username === req.body.username) {
-                            return done(null, false, req.flash('failMessage', 'That username is already taken.'));
-                        } else if (users[0].local.email === req.body.email) {
-                            return done(null, false, req.flash('failMessage', 'A user with that email already exists.'));
-                        }
-                    } else {
-                        // if there is no user with that username, create the user
-                        var newUser = new User();
-
-                        // set the user's local credentials
-                        newUser.local.firstName = req.body.fname;
-                        newUser.local.lastName = req.body.lname;
-                        newUser.local.email = req.body.email;
-                        newUser.local.username = username;
-                        newUser.local.password = newUser.generateHash(password);
-
-                        // save the user
-                        newUser.save(function(err) {
-                            if (err) {
+                    // if user is logged in, connect account to a new local account.
+                    if (req.user) {
+                        var user = req.user;
+                        user.local.username = username;
+                        user.local.password = user.generateHash(password);
+                        user.save(function(err) {
+                            if (err)
                                 throw err;
-                            }
-                            return done(null, newUser);
+                            return done(null, user);
                         });
+                    } else {
+                        // check to see if theres already a user with that username
+                        if (users.length > 0) {
+                            if (users[0].local.username === req.body.username) {
+                                return done(null, false, req.flash('failMessage', 'That username is already taken.'));
+                            } else if (users[0].local.email === req.body.email) {
+                                return done(null, false, req.flash('failMessage', 'A user with that email already exists.'));
+                            }
+                        } else {
+                            // if there is no user with that username, create the user
+                            var newUser = new User();
+
+                            // set the user's local credentials
+                            newUser.local.firstName = req.body.fname;
+                            newUser.local.lastName = req.body.lname;
+                            newUser.local.email = req.body.email;
+                            newUser.local.username = username;
+                            newUser.local.password = newUser.generateHash(password);
+
+                            // save the user
+                            newUser.save(function(err) {
+                                if (err) {
+                                    throw err;
+                                }
+                                return done(null, newUser);
+                            });
+                        }
                     }
+
                 });
 
             });
@@ -125,38 +138,69 @@ module.exports = function(passport) {
             // import crednetials from auth.js
             clientID: auth.facebook.clientID,
             clientSecret: auth.facebook.clientSecret,
-            callbackURL: auth.facebook.callbackURL
+            callbackURL: auth.facebook.callbackURL,
+            passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
 
-        }, function(token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
+        }, function(req, token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
 
             // process.nextTick() for asynchronous
             process.nextTick(function() {
-                User.findOne({'facebook.id': profile.id}, function(err, user) {
-                    if (err) {
-                        return done(err);
-                    } 
-                        console.log(profile)
-                    // if the user is found, then log them in
-                    if (user) {
-                        return done(null, user);    // user found, return that user
-                    } else {
 
-                        var newUser = User();
-                        newUser.facebook.id = profile.id;
-                        newUser.facebook.token = token;     // the token that facebook provides to the user
-                        newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName; // http://passportjs.org/docs/profile
-                        // newUser.facebook.email = profile.emails.value ? profile.emails.value : 'undefined'; // facebook can return multiple emails so we'll take the first
-                    }
-
-                    // save user to the database
-                    newUser.save(function(err) {
+                // check if user is already logged in
+                if (!req.user) {
+                    User.findOne({'facebook.id': profile.id}, function(err, user) {
                         if (err) {
-                            throw err;
+                            return done(err);
+                        } 
+
+                        // if the user is found, then log them in
+                        if (user) {
+
+                            // if there is a user id already but no token (user was linked at one point and then removed)
+                            // just add our token and profile information
+                            if (!user.facebook.token) {
+                                user.facebook.token = token;
+                                user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                                // user.facebook.email = profile.emails[0].value;
+                                user.save(function(err) {
+                                    if (err)
+                                        throw err;
+                                    return done(null, user);
+                                });
+                            }
+
+                            return done(null, user);    // user found, return that user
+                        } else {
+                            var newUser = User();
+                            newUser.facebook.id = profile.id;
+                            newUser.facebook.token = token;     // the token that facebook provides to the user
+                            newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName; // http://passportjs.org/docs/profile
+                            // newUser.facebook.email = profile.emails[0].value; // facebook can return multiple emails so we'll take the first
                         }
-                        // if successful, return the new user
-                        return done(null, newUser);                      
+
+                        // save user to the database
+                        newUser.save(function(err) {
+                            if (err) {
+                                throw err;
+                            }
+                            // if successful, return the new user
+                            return done(null, newUser);                      
+                        });
                     });
-                });
+                } else {
+                    var user = req.user;    // get user data from session
+                    user.facebook.id    = profile.id;
+                    user.facebook.token = token;
+                    user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                    // user.facebook.email = profile.emails[0].value;
+                    // save the user
+                    user.save(function(err) {
+                        if (err)
+                            throw err;
+                        return done(null, user);
+                    });
+                }
+
             });
 
         }
@@ -168,38 +212,56 @@ module.exports = function(passport) {
             // import crednetials from auth.js
             consumerKey: auth.twitter.consumerKey,
             consumerSecret: auth.twitter.consumerSecret,
-            callbackURL: auth.twitter.callbackURL
+            callbackURL: auth.twitter.callbackURL,
+            passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
 
-        }, function(token, tokenSecret, profile, done) {   // fb will send back the 'token' and 'profile'
+        }, function(req, token, tokenSecret, profile, done) {   // fb will send back the 'token' and 'profile'
 
             // process.nextTick() for asynchronous
             process.nextTick(function() {
-                User.findOne({'twitter.id': profile.id}, function(err, user) {
-                    if (err) {
-                        return done(err);
-                    } 
-                        console.log(profile)
-                    // if the user is found, then log them in
-                    if (user) {
-                        return done(null, user);    // user found, return that user
-                    } else {
 
-                        var newUser = User();
-                        newUser.twitter.id = profile.id;
-                        newUser.twitter.token = token;
-                        newUser.twitter.username = profile.username;
-                        newUser.twitter.displayName = profile.displayName;
-                    }
-
-                    // save user to the database
-                    newUser.save(function(err) {
+                // check if user is already logged in
+                if (!req.user) {
+                    User.findOne({'twitter.id': profile.id}, function(err, user) {
                         if (err) {
-                            throw err;
+                            return done(err);
+                        } 
+
+                        // if the user is found, then log them in
+                        if (user) {
+                            return done(null, user);    // user found, return that user
+                        } else {
+
+                            var newUser = User();
+                            newUser.twitter.id = profile.id;
+                            newUser.twitter.token = token;
+                            newUser.twitter.username = profile.username;
+                            newUser.twitter.displayName = profile.displayName;
                         }
-                        // if successful, return the new user
-                        return done(null, newUser);                      
+
+                        // save user to the database
+                        newUser.save(function(err) {
+                            if (err) {
+                                throw err;
+                            }
+                            // if successful, return the new user
+                            return done(null, newUser);                      
+                        });
                     });
-                });
+                } else {
+                    var user = req.user;    // get user data from session
+                    user.twitter.id = profile.id;
+                    user.twitter.token = token;
+                    user.twitter.username = profile.username;
+                    user.twitter.displayName = profile.displayName;
+                    // save the user
+                    user.save(function(err) {
+                        if (err)
+                            throw err;
+                        return done(null, user);
+                    });
+                }
+
             });
 
         }
@@ -212,38 +274,56 @@ module.exports = function(passport) {
             // import crednetials from auth.js
             clientID: auth.google.clientID,
             clientSecret: auth.google.clientSecret,
-            callbackURL: auth.google.callbackURL
+            callbackURL: auth.google.callbackURL,
+            passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
 
-        }, function(token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
+        }, function(req, token, refreshToken, profile, done) {   // fb will send back the 'token' and 'profile'
 
             // process.nextTick() for asynchronous
             process.nextTick(function() {
-                User.findOne({'google.id': profile.id}, function(err, user) {
-                    if (err) {
-                        return done(err);
-                    } 
-                        console.log(profile)
-                    // if the user is found, then log them in
-                    if (user) {
-                        return done(null, user);    // user found, return that user
-                    } else {
 
-                        var newUser = User();
-                        newUser.google.id = profile.id;
-                        newUser.google.token = token;
-                        newUser.google.email = profile.emails[0].value;
-                        newUser.google.name = profile.displayName;
-                    }
-
-                    // save user to the database
-                    newUser.save(function(err) {
+                // check if user is already logged in
+                if (!req.user) {
+                    User.findOne({'google.id': profile.id}, function(err, user) {
                         if (err) {
-                            throw err;
+                            return done(err);
+                        } 
+
+                        // if the user is found, then log them in
+                        if (user) {
+                            return done(null, user);    // user found, return that user
+                        } else {
+
+                            var newUser = User();
+                            newUser.google.id = profile.id;
+                            newUser.google.token = token;
+                            newUser.google.email = profile.emails[0].value;
+                            newUser.google.name = profile.displayName;
                         }
-                        // if successful, return the new user
-                        return done(null, newUser);                      
+
+                        // save user to the database
+                        newUser.save(function(err) {
+                            if (err) {
+                                throw err;
+                            }
+                            // if successful, return the new user
+                            return done(null, newUser);                      
+                        });
                     });
-                });
+                } else {
+                    var user = req.user;    // get user data from session
+                    user.google.id = profile.id;
+                    user.google.token = token;
+                    user.google.email = profile.emails[0].value;
+                    user.google.name = profile.displayName;
+                    // save the user
+                    user.save(function(err) {
+                        if (err)
+                            throw err;
+                        return done(null, user);
+                    });
+                }
+                   
             });
 
         }

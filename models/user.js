@@ -2,6 +2,12 @@ var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
 var userSchema = new mongoose.Schema({
+	privilege: {
+		type: String,
+		trim: true
+	},
+	resetPasswordToken: String,
+	resetPasswordExpires: Date,
 	local: {
 		username: {
 			type: String,
@@ -27,13 +33,7 @@ var userSchema = new mongoose.Schema({
 			type: String,
 			// unique: true,
 			// required: true,
-		},
-		privilege: {
-			type: String,
-			trim: true
-		},
-		resetPasswordToken: String,
-  		resetPasswordExpires: Date
+		}
 	},
 	facebook: {
 		id: {

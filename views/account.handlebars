@@ -21,6 +21,16 @@
 				<th>Password</th>
 				<td>{{user.local.password}}</td>
 			</tr>
+			<tr>
+				<td colspan="2">
+				{{#if user.local.password}}
+					<a href="/unlink/local" class="btn btn-default">Unlink</a>
+				{{/if}}
+				{{#unless user.local.password}}
+					<a href="/connect/local" class="btn btn-default">Connect Local</a>
+				{{/unless}}	
+				</td>
+			</tr>
 		</table>
 		<table class="table table-bordered">
 			<tr>
@@ -37,6 +47,16 @@
 			<tr>
 				<th>Name</th>
 				<td>{{user.facebook.name}}</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+				{{#if user.facebook.token}}
+					<a href="/unlink/facebook" class="btn btn-default">Unlink</a>
+				{{/if}}
+				{{#unless user.facebook.token}}
+					<a href="/connect/facebook" class="btn btn-default">Connect Facebook</a>
+				{{/unless}}
+				</td>
 			</tr>
 		</table>
 		<table class="table table-bordered">
@@ -55,6 +75,16 @@
 				<th>Name</th>
 				<td>{{user.twitter.displayName}}</td>
 			</tr>
+			<tr>
+				<td colspan="2">
+				{{#if user.twitter.token}}
+					<a href="/unlink/twitter" class="btn btn-default">Unlink</a>
+				{{/if}}	
+				{{#unless user.twitter.token}}
+					<a href="/connect/twitter" class="btn btn-default">Connect Twitter</a>
+				{{/unless}}
+				</td>
+			</tr>
 		</table>
 		<table class="table table-bordered">
 			<tr>
@@ -71,6 +101,16 @@
 			<tr>
 				<th>Name</th>
 				<td>{{user.google.name}}</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+				{{#if user.google.token}}
+					<a href="/unlink/google" class="btn btn-default">Unlink</a>
+				{{/if}}
+				{{#unless user.google.token}}
+					<a href="/connect/google" class="btn btn-default">Connect Google</a>
+				{{/unless}}
+				</td>
 			</tr>
 		</table>	
 	</div>
